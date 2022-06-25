@@ -160,7 +160,7 @@ if __name__ == "__main__":
     # -------------------------------------------- step 1/4 : 加载数据 ---------------------------
     train_dir_list = 'train.txt'
     valid_dir_list = 'val.txt'
-    batch_size = 16
+    batch_size = 64
     epochs = 10
     num_classes = 214 # 垃圾共214类
     train_data = Garbage_Loader(train_dir_list, train_flag=True)
@@ -177,9 +177,9 @@ if __name__ == "__main__":
     model.fc = nn.Linear(fc_inputs, num_classes)
     model = model.cuda()
     # ------------------------------------ step 3/4 : 定义损失函数和优化器等 -------------------------
-    learn_rate = 1e-3
+    learn_rate = 1e-4
     lr_stepsize = 20
-    weight_decay = 0.001
+    weight_decay = 1e-3
     criterion = nn.CrossEntropyLoss().cuda()
     optimizer = optim.Adam(model.parameters(), lr=learn_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_stepsize, gamma=0.1)
