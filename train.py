@@ -8,7 +8,7 @@ import time
 import os
 import shutil
 from torch.utils.tensorboard import SummaryWriter
-from utils import *
+from utils import accuracy, save_checkpoint, AverageMeter
 from progress.bar import Bar
 
 
