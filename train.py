@@ -15,7 +15,7 @@ from progress.bar import Bar
 def train(train_loader, model, criterion, optimizer, epoch, writer):
 
     batch_time = AverageMeter()  # 训练一个batch
-    data_time = AverageMeter()  # 训练一次数据集
+    data_time = AverageMeter()  # 加载数据时间
     losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
