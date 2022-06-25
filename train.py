@@ -8,47 +8,24 @@ import time
 import os
 import shutil
 from torch.utils.tensorboard import SummaryWriter
-
-
-def accuracy(output, target, topk=(1,)):
-
-    with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
-
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-        class_to = pred[0].cpu().numpy()
-
-        res = []
-        for k in topk:
-            correct_k = correct[:k].contiguous().view(-1).float().sum(0, keepdim=True)
-            res.append(correct_k.mul_(100.0 / batch_size))
-        return res, class_to
-
-
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
-
-    torch.save(state, filename)
-    if is_best:
-        shutil.copyfile(filename, 'model_best_' + filename) # 复制文件到另一个文件夹中
+from utils import *
+from progress.bar import Bar
 
 
 def train(train_loader, model, criterion, optimizer, epoch, writer):
 
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
+    batch_time = AverageMeter()  # 训练一个batch
+    data_time = AverageMeter()  # 训练一次数据集
     losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
+    bar = Bar('Processing', max=len(train_loader))
 
     # switch to train mode
     model.train()
 
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for batch_idx, (input, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -60,7 +37,7 @@ def train(train_loader, model, criterion, optimizer, epoch, writer):
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        [prec1, prec5], class_to = accuracy(output, target, topk=(1, 5))
+        [prec1, prec5] = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
         top5.update(prec5[0], input.size(0))
@@ -74,28 +51,22 @@ def train(train_loader, model, criterion, optimizer, epoch, writer):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % 10 == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                  'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                epoch, i, len(train_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1, top5=top5))
-    writer.add_scalar('loss/train_loss', losses.val, global_step=epoch)
+        bar.suffix = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
+            batch=batch_idx + 1,
+            size=len(train_loader),
+            data=data_time.val,
+            bt=batch_time.val,
+            loss=losses.avg,
+            top1=top1.avg,
+            top5=top5.avg,
+        )
+        bar.next()
+    bar.finish()
+    writer.add_scalar('train_loss', losses.val, global_step=epoch)
 
 
 def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
-    """
-        验证代码
-        参数：
-            val_loader - 验证集的 DataLoader
-            model - 模型
-            criterion - 损失函数
-            epoch - 进行第几个 epoch
-            writer - 用于写 tensorboardX 
-    """
+
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -114,7 +85,7 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            [prec1, prec5], class_to = accuracy(output, target, topk=(1, 5))
+            [prec1, prec5] = accuracy(output, target, topk=(1, 5))
             losses.update(loss.item(), input.size(0))
             top1.update(prec1[0], input.size(0))
             top5.update(prec5[0], input.size(0))
@@ -123,50 +94,31 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % 10 == 0:
-                print('Test-{0}: [{1}/{2}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                    phase, i, len(val_loader),
-                    batch_time=batch_time,
-                    loss=losses,
-                    top1=top1, top5=top5))
-
-        print(' * {} Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
-              .format(phase, top1=top1, top5=top5))
-    writer.add_scalar('loss/valid_loss', losses.val, global_step=epoch)
+            bar.suffix = '({batch}/{size}) Time: {time:.3f}s | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
+                batch=i + 1,
+                size=len(val_loader),
+                time=batch_time.val,
+                loss=losses.avg,
+                top1=top1.avg,
+                top5=top5.avg,
+            )
+        bar.finish()
+        print(' * {} Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'.format(phase, top1=top1, top5=top5))
+    writer.add_scalar('valid_loss', losses.val, global_step=epoch)
     return top1.avg, top5.avg
-
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
-    def __init__(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
 
 
 if __name__ == "__main__":
     # -------------------------------------------- step 1/4 : 加载数据 ---------------------------
     train_dir_list = 'train.txt'
     valid_dir_list = 'val.txt'
-    batch_size = 64
+    batch_size = 4
     epochs = 10
     num_classes = 214 # 垃圾共214类
     train_data = Garbage_Loader(train_dir_list, train_flag=True)
     valid_data = Garbage_Loader(valid_dir_list, train_flag=False)
-    train_loader = DataLoader(dataset=train_data, num_workers=8, pin_memory=True, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_data, num_workers=8, pin_memory=True, batch_size=batch_size)
+    train_loader = DataLoader(dataset=train_data, num_workers=2, pin_memory=True, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(dataset=valid_data, num_workers=2, pin_memory=True, batch_size=batch_size)
     train_data_size = len(train_data)
     print('训练集数量：%d' % train_data_size)
     valid_data_size = len(valid_data)
@@ -184,7 +136,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=learn_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_stepsize, gamma=0.1)
 
-    writer = SummaryWriter('runs/resnet101')
+    writer = SummaryWriter('SummaryWriter/resnet101')
     # ------------------------------------ step 4/4 : 训练 -----------------------------------------
     best_prec1 = 0
     for epoch in range(epochs):
@@ -201,5 +153,5 @@ if __name__ == "__main__":
             'best_prec1': best_prec1,
             'optimizer': optimizer.state_dict(),
         }, is_best,
-            filename='checkpoint_resnet101.pth.tar')
+            filename='model/checkpoint_resnet101.pth.tar')
     writer.close()
