@@ -71,6 +71,7 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
     losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
+    bar = Bar('Processing', max=len(val_loader))
 
     # switch to evaluate mode
     model.eval()
