@@ -19,9 +19,9 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def save_checkpoint(state, is_best, filename='model/checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
-    torch.save(state, filename)
+    torch.save(state, 'model/' + filename)
     if is_best:
         shutil.copyfile(filename, 'model/model_best/best_' + filename) # 复制文件到另一个文件夹中
 
