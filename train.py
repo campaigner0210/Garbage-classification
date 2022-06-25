@@ -155,5 +155,5 @@ if __name__ == "__main__":
             'best_prec1': best_prec1,
             'optimizer': optimizer.state_dict(),
         }, is_best,
-            filename='model/checkpoint_resnet101.pth.tar')
+            filename='checkpoint_resnet101.pth.tar')
     writer.close()
