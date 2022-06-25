@@ -111,11 +111,11 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
 
 
 if __name__ == "__main__":
-    # -------------------------------------------- step 1/4 : 加载数据 ---------------------------
+    # ------------------------------------- step 1/4 : 加载数据 ------------------------------------
     train_dir_list = 'train.txt'
     valid_dir_list = 'val.txt'
     batch_size = 64
-    epochs = 10
+    epochs = 66
     num_classes = 214 # 垃圾共214类
     train_data = Garbage_Loader(train_dir_list, train_flag=True)
     valid_data = Garbage_Loader(valid_dir_list, train_flag=False)
@@ -125,20 +125,29 @@ if __name__ == "__main__":
     print('训练集数量：%d' % train_data_size)
     valid_data_size = len(valid_data)
     print('验证集数量：%d' % valid_data_size)
-    # ------------------------------------ step 2/4 : 定义网络 ------------------------------------
+    # ------------------------------- step 2/4 : 定义网络(加载训练权重) -------------------------------
     model = models.resnet101(pretrained=True)
     fc_inputs = model.fc.in_features
     model.fc = nn.Linear(fc_inputs, num_classes)
+
+    # 加载预训练权重
+    weights_path = 'model/model_best/best_checkpoint_resnet101.pth.tar'
+    if os.path.exists(weights_path):
+        weights = torch.load(weights_path)['state_dict']  # 读取预训练模型权重
+        model.load_state_dict(weights)
+
     model = model.cuda()
-    # ------------------------------------ step 3/4 : 定义损失函数和优化器等 -------------------------
+    # ------------------------------ step 3/4 : 定义损失函数和优化器(多方案) ---------------------------
     learn_rate = 1e-4
     lr_stepsize = 20
     weight_decay = 1e-3
     criterion = nn.CrossEntropyLoss().cuda()
     optimizer = optim.Adam(model.parameters(), lr=learn_rate, weight_decay=weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_stepsize, gamma=0.1)
+    # optimizer = optim.SGD(model.parameters(), lr=learn_rate,momentum=0.9, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_stepsize, gamma=0.1)  # 等间隔调整学习率
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=5, verbose=False)
 
-    writer = SummaryWriter('SummaryWriter/resnet101')
+    writer = SummaryWriter('SW_resnet101')
     # ------------------------------------ step 4/4 : 训练 -----------------------------------------
     best_prec1 = 0
     for epoch in range(epochs):
@@ -146,6 +155,7 @@ if __name__ == "__main__":
         scheduler.step()
         # 在验证集上测试效果
         valid_prec1, valid_prec5 = validate(valid_loader, model, criterion, epoch, writer, phase="VAL")
+        # scheduler.step(valid_prec1)
         is_best = valid_prec1 > best_prec1
         best_prec1 = max(valid_prec1, best_prec1)
         save_checkpoint({
