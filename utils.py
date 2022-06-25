@@ -23,7 +23,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
     torch.save(state, 'model/' + filename)
     if is_best:
-        shutil.copyfile(filename, 'model/model_best/best_' + filename) # 复制文件到另一个文件夹中
+        shutil.copyfile('model/' + filename, 'model/model_best/best_' + filename) # 复制文件到另一个文件夹中
 
 
 class AverageMeter(object):
