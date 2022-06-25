@@ -19,7 +19,7 @@ def train(train_loader, model, criterion, optimizer, epoch, writer):
     losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
-    bar = Bar('Processing', max=len(train_loader))
+    bar = Bar('Epoch[{}]Train'.format(epoch), max=len(train_loader))
 
     # switch to train mode
     model.train()
@@ -71,7 +71,7 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
     losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
-    bar = Bar('Processing', max=len(val_loader))
+    bar = Bar(''Epoch[{}]Val'.format(epoch)', max=len(val_loader))
 
     # switch to evaluate mode
     model.eval()
