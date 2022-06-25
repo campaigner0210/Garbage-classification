@@ -63,7 +63,6 @@ class Garbage_Loader(Dataset):
         img = Image.open(img_path)
         img = img.convert('RGB') # 去除透明通道
         img = self.padding_black(img)
-        print(img.size)
         if self.train_flag:
             img = self.train_tf(img)
         else:
