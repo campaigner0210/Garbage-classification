@@ -103,6 +103,7 @@ def validate(val_loader, model, criterion, epoch, writer, phase="VAL"):
                 top1=top1.avg,
                 top5=top5.avg,
             )
+            bar.next()
         bar.finish()
         print(' * {} Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'.format(phase, top1=top1, top5=top5))
     writer.add_scalar('valid_loss', losses.val, global_step=epoch)
