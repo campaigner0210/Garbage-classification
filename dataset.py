@@ -76,7 +76,7 @@ class Garbage_Loader(Dataset):
 
 
 if __name__ == "__main__":
-    train_dataset = Garbage_Loader("train.txt", True)
+    train_dataset = Garbage_Loader("train.txt", False)
     print("数据个数：", len(train_dataset))
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                batch_size=1,
