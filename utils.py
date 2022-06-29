@@ -21,14 +21,13 @@ def accuracy(output, target, topk=(1,)):
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
-    fold = str(state['epoch']) + '_'
-    torch.save(state, 'model/' + fold + filename)
+    pre = str(state['valid_prec1']) + '_'
+    torch.save(state, 'model/' + pre + filename)
     if is_best:
         shutil.copyfile('model/' + fold + filename, 'model/model_best/best_' + filename) # 复制文件到另一个文件夹中
 
 
 class AverageMeter(object):
-    """Computes and stores the average and current value"""
 
     def __init__(self):
         self.val = 0
