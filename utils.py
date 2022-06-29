@@ -1,5 +1,6 @@
 import torch
 import shutil
+import time
 
 
 def accuracy(output, target, topk=(1,)):
@@ -24,7 +25,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     pre = str(state['valid_prec1']) + '_'
     torch.save(state, 'model/' + pre + filename)
     if is_best:
-        shutil.copyfile('model/' + fold + filename, 'model/model_best/best_' + filename + '{}'.format(str(time.strftime('%Y-%m-%d %H:%M:%S').replace(' ', '_')))) # 复制文件到另一个文件夹中
+        shutil.copyfile('model/' + filename, 'model/model_best/best_' + filename + '{}'.format(str(time.strftime('%Y-%m-%d %H:%M:%S').replace(' ', '_')))) # 复制文件到另一个文件夹中
 
 
 class AverageMeter(object):
