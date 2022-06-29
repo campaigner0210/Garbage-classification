@@ -78,5 +78,5 @@ class Ui_GarbageSortingUI(object):
         self.Output.setText(_translate("GarbageSortingUI", "识别图片"))
         self.ShiBieJieGuo.setText(_translate("GarbageSortingUI", "识别结果："))
         self.GarbageSorting.setText(_translate("GarbageSortingUI", "垃圾分类"))
-        self.TestImage.setText(_translate("GarbageSortingUI", "TextLabel"))
+#         self.TestImage.setText(_translate("GarbageSortingUI", "TextLabel"))
 
