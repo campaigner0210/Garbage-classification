@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # 加载数据
     train_dir_list = 'train.txt'
     valid_dir_list = 'val.txt'
-    batch_size = 4
+    batch_size = 64
     epochs = 66
     num_classes = 214 # 垃圾共214类
     train_data = Garbage_Loader(train_dir_list, train_flag=True)
