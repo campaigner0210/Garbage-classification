@@ -94,7 +94,8 @@ class Main(QMainWindow, Ui_GarbageSortingUI):
         self.pred_id = np.argmax(score)
         self.pre_type = self.labels[self.pred_id][0]
         # self.TestResult.setText(self.pre_type)
-        self.TestResult.insertPlainText(self.pre_type + '\n')
+        self.TestResult.insertPlainText('预测类型：' + self.pre_type + '\n')
+        self.TestResult.insertPlainText('真实类型：' + self.ture_type + '\n')
         # self.textBrowser.setText(self.ture_type)
         # self.textBrowser_2.setText(self.pre_type == self.ture_type)
 
